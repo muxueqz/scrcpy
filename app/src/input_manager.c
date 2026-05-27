@@ -34,6 +34,7 @@ sc_input_manager_init(struct sc_input_manager *im,
     im->clipboard_autosync = params->clipboard_autosync;
 
     im->sdl_shortcut_mods = sc_shortcut_mods_to_sdl(params->shortcut_mods);
+    im->shortcut_keys = params->shortcut_keys;
 
     im->vfinger_down = false;
     im->vfinger_invert_x = false;
@@ -401,160 +402,179 @@ sc_input_manager_process_key(struct sc_input_manager *im,
 
     if (is_shortcut) {
         enum sc_action action = down ? SC_ACTION_DOWN : SC_ACTION_UP;
-        switch (sdl_keycode) {
-            case SDLK_h:
-                if (im->kp && !shift && !repeat && !paused) {
-                    action_home(im, action);
-                }
-                return;
-            case SDLK_b: // fall-through
-            case SDLK_BACKSPACE:
-                if (im->kp && !shift && !repeat && !paused) {
-                    action_back(im, action);
-                }
-                return;
-            case SDLK_s:
-                if (im->kp && !shift && !repeat && !paused) {
-                    action_app_switch(im, action);
-                }
-                return;
-            case SDLK_m:
-                if (im->kp && !shift && !repeat && !paused) {
-                    action_menu(im, action);
-                }
-                return;
-            case SDLK_p:
-                if (im->kp && !shift && !repeat && !paused) {
-                    action_power(im, action);
-                }
-                return;
-            case SDLK_o:
-                if (control && !repeat && down && !paused) {
-                    bool on = shift;
-                    set_display_power(im, on);
-                }
-                return;
-            case SDLK_z:
-                if (video && down && !repeat) {
-                    sc_screen_set_paused(im->screen, !shift);
-                }
-                return;
-            case SDLK_DOWN:
-                if (shift) {
-                    if (video && !repeat && down) {
-                        apply_orientation_transform(im,
-                                                    SC_ORIENTATION_FLIP_180);
-                    }
-                } else if (im->kp && !paused) {
-                    // forward repeated events
-                    action_volume_down(im, action);
-                }
-                return;
-            case SDLK_UP:
-                if (shift) {
-                    if (video && !repeat && down) {
-                        apply_orientation_transform(im,
-                                                    SC_ORIENTATION_FLIP_180);
-                    }
-                } else if (im->kp && !paused) {
-                    // forward repeated events
-                    action_volume_up(im, action);
-                }
-                return;
-            case SDLK_LEFT:
+        const struct sc_shortcut_key_bindings *keys = &im->shortcut_keys;
+
+        if (sdl_keycode == keys->home) {
+            if (im->kp && !shift && !repeat && !paused) {
+                action_home(im, action);
+            }
+            return;
+        }
+        if (sdl_keycode == keys->back || sdl_keycode == SDLK_BACKSPACE) {
+            if (im->kp && !shift && !repeat && !paused) {
+                action_back(im, action);
+            }
+            return;
+        }
+        if (sdl_keycode == keys->app_switch) {
+            if (im->kp && !shift && !repeat && !paused) {
+                action_app_switch(im, action);
+            }
+            return;
+        }
+        if (sdl_keycode == keys->menu) {
+            if (im->kp && !shift && !repeat && !paused) {
+                action_menu(im, action);
+            }
+            return;
+        }
+        if (sdl_keycode == keys->power) {
+            if (im->kp && !shift && !repeat && !paused) {
+                action_power(im, action);
+            }
+            return;
+        }
+        if (sdl_keycode == keys->screen_power) {
+            if (control && !repeat && down && !paused) {
+                bool on = shift;
+                set_display_power(im, on);
+            }
+            return;
+        }
+        if (sdl_keycode == keys->pause) {
+            if (video && down && !repeat) {
+                sc_screen_set_paused(im->screen, !shift);
+            }
+            return;
+        }
+        if (sdl_keycode == keys->volume_down) {
+            if (shift) {
                 if (video && !repeat && down) {
-                    if (shift) {
-                        apply_orientation_transform(im,
-                                                    SC_ORIENTATION_FLIP_0);
-                    } else {
-                        apply_orientation_transform(im,
-                                                    SC_ORIENTATION_270);
-                    }
+                    apply_orientation_transform(im,
+                                                SC_ORIENTATION_FLIP_180);
                 }
-                return;
-            case SDLK_RIGHT:
+            } else if (im->kp && !paused) {
+                // forward repeated events
+                action_volume_down(im, action);
+            }
+            return;
+        }
+        if (sdl_keycode == keys->volume_up) {
+            if (shift) {
                 if (video && !repeat && down) {
-                    if (shift) {
-                        apply_orientation_transform(im,
-                                                    SC_ORIENTATION_FLIP_0);
-                    } else {
-                        apply_orientation_transform(im,
-                                                    SC_ORIENTATION_90);
-                    }
+                    apply_orientation_transform(im,
+                                                SC_ORIENTATION_FLIP_180);
                 }
-                return;
-            case SDLK_c:
-                if (im->kp && !shift && !repeat && down && !paused) {
-                    get_device_clipboard(im, SC_COPY_KEY_COPY);
+            } else if (im->kp && !paused) {
+                // forward repeated events
+                action_volume_up(im, action);
+            }
+            return;
+        }
+        if (sdl_keycode == keys->rotate_left) {
+            if (video && !repeat && down) {
+                if (shift) {
+                    apply_orientation_transform(im,
+                                                SC_ORIENTATION_FLIP_0);
+                } else {
+                    apply_orientation_transform(im,
+                                                SC_ORIENTATION_270);
                 }
-                return;
-            case SDLK_x:
-                if (im->kp && !shift && !repeat && down && !paused) {
-                    get_device_clipboard(im, SC_COPY_KEY_CUT);
+            }
+            return;
+        }
+        if (sdl_keycode == keys->rotate_right) {
+            if (video && !repeat && down) {
+                if (shift) {
+                    apply_orientation_transform(im,
+                                                SC_ORIENTATION_FLIP_0);
+                } else {
+                    apply_orientation_transform(im,
+                                                SC_ORIENTATION_90);
                 }
-                return;
-            case SDLK_v:
-                if (im->kp && !repeat && down && !paused) {
-                    if (shift || im->legacy_paste) {
-                        // inject the text as input events
-                        clipboard_paste(im);
-                    } else {
-                        // store the text in the device clipboard and paste,
-                        // without requesting an acknowledgment
-                        set_device_clipboard(im, true, SC_SEQUENCE_INVALID);
-                    }
+            }
+            return;
+        }
+        if (sdl_keycode == keys->copy) {
+            if (im->kp && !shift && !repeat && down && !paused) {
+                get_device_clipboard(im, SC_COPY_KEY_COPY);
+            }
+            return;
+        }
+        if (sdl_keycode == keys->cut) {
+            if (im->kp && !shift && !repeat && down && !paused) {
+                get_device_clipboard(im, SC_COPY_KEY_CUT);
+            }
+            return;
+        }
+        if (sdl_keycode == keys->paste) {
+            if (im->kp && !repeat && down && !paused) {
+                if (shift || im->legacy_paste) {
+                    // inject the text as input events
+                    clipboard_paste(im);
+                } else {
+                    // store the text in the device clipboard and paste,
+                    // without requesting an acknowledgment
+                    set_device_clipboard(im, true, SC_SEQUENCE_INVALID);
                 }
-                return;
-            case SDLK_f:
-                if (video && !shift && !repeat && down) {
-                    sc_screen_toggle_fullscreen(im->screen);
+            }
+            return;
+        }
+        if (sdl_keycode == keys->fullscreen) {
+            if (video && !shift && !repeat && down) {
+                sc_screen_toggle_fullscreen(im->screen);
+            }
+            return;
+        }
+        if (sdl_keycode == keys->resize_to_fit) {
+            if (video && !shift && !repeat && down) {
+                sc_screen_resize_to_fit(im->screen);
+            }
+            return;
+        }
+        if (sdl_keycode == keys->pixel_perfect) {
+            if (video && !shift && !repeat && down) {
+                sc_screen_resize_to_pixel_perfect(im->screen);
+            }
+            return;
+        }
+        if (sdl_keycode == keys->fps_counter) {
+            if (video && !shift && !repeat && down) {
+                switch_fps_counter_state(im);
+            }
+            return;
+        }
+        if (sdl_keycode == keys->panels) {
+            if (control && !repeat && down && !paused) {
+                if (shift) {
+                    collapse_panels(im);
+                } else if (im->key_repeat == 0) {
+                    expand_notification_panel(im);
+                } else {
+                    expand_settings_panel(im);
                 }
-                return;
-            case SDLK_w:
-                if (video && !shift && !repeat && down) {
-                    sc_screen_resize_to_fit(im->screen);
+            }
+            return;
+        }
+        if (sdl_keycode == keys->rotate_device) {
+            if (control && !repeat && down && !paused) {
+                if (shift) {
+                    reset_video(im);
+                } else {
+                    rotate_device(im);
                 }
-                return;
-            case SDLK_g:
-                if (video && !shift && !repeat && down) {
-                    sc_screen_resize_to_pixel_perfect(im->screen);
-                }
-                return;
-            case SDLK_i:
-                if (video && !shift && !repeat && down) {
-                    switch_fps_counter_state(im);
-                }
-                return;
-            case SDLK_n:
-                if (control && !repeat && down && !paused) {
-                    if (shift) {
-                        collapse_panels(im);
-                    } else if (im->key_repeat == 0) {
-                        expand_notification_panel(im);
-                    } else {
-                        expand_settings_panel(im);
-                    }
-                }
-                return;
-            case SDLK_r:
-                if (control && !repeat && down && !paused) {
-                    if (shift) {
-                        reset_video(im);
-                    } else {
-                        rotate_device(im);
-                    }
-                }
-                return;
-            case SDLK_k:
-                if (control && !shift && !repeat && down && !paused
-                        && im->kp && im->kp->hid) {
-                    // Only if the current keyboard is hid
-                    open_hard_keyboard_settings(im);
-                }
-                return;
+            }
+            return;
+        }
+        if (sdl_keycode == keys->open_keyboard_settings) {
+            if (control && !shift && !repeat && down && !paused
+                    && im->kp && im->kp->hid) {
+                // Only if the current keyboard is hid
+                open_hard_keyboard_settings(im);
+            }
+            return;
         }
 
-        return;
     }
 
     if (!im->kp || paused) {

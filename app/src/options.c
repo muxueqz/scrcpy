@@ -1,6 +1,7 @@
 #include "options.h"
 
 #include <stddef.h>
+#include <SDL2/SDL_keycode.h>
 
 const struct scrcpy_options scrcpy_options_default = {
     .serial = NULL,
@@ -48,6 +49,29 @@ const struct scrcpy_options scrcpy_options_default = {
     .tunnel_host = 0,
     .tunnel_port = 0,
     .shortcut_mods = SC_SHORTCUT_MOD_LALT | SC_SHORTCUT_MOD_LSUPER,
+    .shortcut_keys = {
+        .home = SDLK_h,
+        .back = SDLK_b,
+        .app_switch = SDLK_s,
+        .menu = SDLK_m,
+        .power = SDLK_p,
+        .screen_power = SDLK_o,
+        .pause = SDLK_z,
+        .volume_down = SDLK_DOWN,
+        .volume_up = SDLK_UP,
+        .rotate_left = SDLK_LEFT,
+        .rotate_right = SDLK_RIGHT,
+        .copy = SDLK_c,
+        .cut = SDLK_x,
+        .paste = SDLK_v,
+        .fullscreen = SDLK_f,
+        .resize_to_fit = SDLK_w,
+        .pixel_perfect = SDLK_g,
+        .fps_counter = SDLK_i,
+        .panels = SDLK_n,
+        .rotate_device = SDLK_r,
+        .open_keyboard_settings = SDLK_k,
+    },
     .max_size = 0,
     .video_bit_rate = 0,
     .audio_bit_rate = 0,

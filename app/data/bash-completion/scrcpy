@@ -81,6 +81,7 @@ _scrcpy() {
         -s --serial=
         -S --turn-screen-off
         --screen-off-timeout=
+        --shortcut-key=
         --shortcut-mod=
         --start-app=
         -t --show-touches
@@ -171,6 +172,10 @@ _scrcpy() {
             ;;
         --render-driver)
             COMPREPLY=($(compgen -W 'direct3d opengl opengles2 opengles metal software' -- "$cur"))
+            return
+            ;;
+        --shortcut-key)
+            COMPREPLY=($(compgen -W 'home= back= app-switch= menu= power= screen-power= pause= volume-down= volume-up= rotate-left= rotate-right= copy= cut= paste= fullscreen= resize-to-fit= pixel-perfect= fps-counter= panels= rotate-device= open-keyboard-settings=' -- "$cur"))
             return
             ;;
         --shortcut-mod)
